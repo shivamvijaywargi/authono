@@ -10,7 +10,6 @@ export const db = drizzle(sqlite, {
   logger: true,
 });
 
-// export const connection = sqlite(env.DATABASE_URL, {
-//   max: env.DB_MIGRATING || env.DB_SEEDING ? 1 : undefined,
-//   onnotice: env.DB_SEEDING ? () => {} : undefined,
-// });
+export function closeConnection() {
+  sqlite.close();
+}
