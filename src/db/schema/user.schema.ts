@@ -4,6 +4,7 @@ import { relations, sql } from "drizzle-orm";
 import roleSchema from "./role.schema";
 import sessionSchema from "./session.schema";
 import connectionSchema from "./connection.schema";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
 const userSchema = sqliteTable("users", {
   id: text("id")
@@ -27,3 +28,6 @@ export const userRelations = relations(userSchema, ({ many }) => ({
 }));
 
 export default userSchema;
+
+export const insertUserSchema = createInsertSchema(userSchema);
+export const selectUserSchema = createSelectSchema(userSchema);
