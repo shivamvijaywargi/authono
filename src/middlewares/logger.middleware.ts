@@ -71,14 +71,43 @@ process.on("unhandledRejection", (reason, promise) => {
   logger.error({ reason, promise }, "Unhandled Rejection");
 });
 
-// Rotate logs at midnight
-setInterval(() => {
-  const targets = transport.targets;
-  targets.forEach((target: any, index: number) => {
+// Function to update log files
+function updateLogFiles() {
+  const newCombinedFile = getLogFilename("combined");
+  const newErrorFile = getLogFilename("error");
+
+  transport.targets.forEach((target: any) => {
     if (target.target === "pino/file") {
-      target.options.destination = getLogFilename(
-        index === 1 ? "error" : "combined"
-      );
+      target.options.destination = target.options.destination.includes("error")
+        ? newErrorFile
+        : newCombinedFile;
     }
   });
-}, 24 * 60 * 60 * 1000); // Check every 24 hours
+
+  logger.info(
+    `Log files rotated: Combined - ${newCombinedFile}, Error - ${newErrorFile}`
+  );
+}
+
+// Function to schedule next midnight
+function scheduleNextMidnight() {
+  const now = new Date();
+  const night = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1, // the next day
+    0, // at 00:00:00 hours
+    0,
+    0
+  );
+  const msToMidnight = night.getTime() - now.getTime();
+
+  setTimeout(() => {
+    updateLogFiles();
+    scheduleNextMidnight(); // Schedule the next one
+  }, msToMidnight);
+}
+
+// Initial update and scheduling
+// updateLogFiles();
+scheduleNextMidnight();
