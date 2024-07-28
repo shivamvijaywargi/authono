@@ -1,11 +1,12 @@
 import { Hono } from "hono";
-import { logger } from "hono/logger";
+import { logger as honoLogger } from "hono/logger";
 
 import { authRoutes } from "./modules/auth/auth.routes";
+import { logger } from "./middlewares/logger.middleware";
 
 const app = new Hono();
 
-app.use(logger());
+app.use(honoLogger());
 
 app.get("/", (c) => {
   return c.text("Hello Hono!");
@@ -25,7 +26,7 @@ app.notFound((c) => {
 });
 
 app.onError((err, c) => {
-  console.error(`${err}`);
+  logger.error(err);
 
   if (err instanceof Error) {
     if (err.name === "SQLiteError") {
@@ -55,6 +56,8 @@ app.onError((err, c) => {
     500
   );
 });
+
+logger.info(`Server running on http://localhost:5511`);
 
 export default {
   port: 5511,
