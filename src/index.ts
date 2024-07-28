@@ -34,9 +34,17 @@ app.onError((err, c) => {
           success: false,
           message: err.message,
         },
-        500
+        500 // TODO: Change this as per the error type
       );
     }
+
+    return c.json(
+      {
+        success: false,
+        message: err.message,
+      },
+      500
+    );
   }
 
   return c.json(
