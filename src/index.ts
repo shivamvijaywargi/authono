@@ -57,7 +57,9 @@ app.onError((err, c) => {
   );
 });
 
-logger.info(`Server running on http://localhost:5511`);
+logger.info(
+  `Server is running on http://localhost:5511 in ${process.env.NODE_ENV} mode`
+);
 
 export default {
   port: 5511,
