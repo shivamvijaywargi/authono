@@ -1,4 +1,5 @@
 import { ZodError, z } from "zod";
+import { logger } from "./middlewares/logger.middleware";
 
 const EnvSchema = z.object({
   NODE_ENV: z.string().default("development"),
@@ -19,7 +20,7 @@ try {
     e.stack = "";
     throw e;
   } else {
-    console.error(error);
+    logger.error(error);
   }
 }
 
