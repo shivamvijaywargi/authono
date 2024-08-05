@@ -1,23 +1,48 @@
-import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import authValidations from "./auth.validations";
+import { zValidator } from "@hono/zod-validator";
+import { eq, or } from "drizzle-orm";
+import { hash } from "bcrypt";
+
 import { db } from "../../db";
-import { userSchema } from "../../db/schema";
-import { insertUserSchema } from "../../db/schema/user.schema";
+import { passwordSchema, userSchema } from "../../db/schema";
+import authValidations from "./auth.validations";
 
 const authRoutes = new Hono();
 
 authRoutes.post(
   "/register",
-  zValidator("json", insertUserSchema),
+  zValidator("json", authValidations.createUserSchema),
   async (c) => {
-    const { email, name, username } = c.req.valid("json");
+    const { email, name, username, password } = c.req.valid("json");
 
-    const user = await db
-      .insert(userSchema)
-      .values({ email, name, username })
-      .returning()
-      .get();
+    const existingUser = await db.query.userSchema.findFirst({
+      where: or(eq(userSchema.email, email), eq(userSchema.username, username)),
+    });
+
+    if (existingUser) {
+      return c.json({ success: false, message: "User already exists" }, 409);
+    }
+
+    const hashedPassword = await hash(password, 10);
+
+    const user = await db.transaction(async (tx) => {
+      const newUser = await tx
+        .insert(userSchema)
+        .values({
+          email,
+          username,
+          name,
+        })
+        .returning()
+        .get();
+
+      await tx.insert(passwordSchema).values({
+        hash: hashedPassword,
+        userId: newUser.id,
+      });
+
+      return newUser;
+    });
 
     return c.json(
       {

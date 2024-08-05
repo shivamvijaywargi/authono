@@ -13,6 +13,7 @@
   "dependencies": {
     "@hono/zod-validator": "^0.2.2",
     "@paralleldrive/cuid2": "^2.2.2",
+    "bcrypt": "^5.1.1",
     "drizzle-orm": "^0.32.1",
     "drizzle-zod": "^0.5.1",
     "hono": "^4.5.1",
@@ -20,6 +21,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
     "@types/bun": "latest",
     "drizzle-kit": "^0.23.0",
     "pino-pretty": "^11.2.2",
