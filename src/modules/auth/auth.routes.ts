@@ -1,11 +1,13 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { eq, or } from "drizzle-orm";
-import { hash } from "bcrypt";
+import { compare, hash } from "bcrypt";
+import { sign } from "jsonwebtoken";
 
 import { db } from "../../db";
-import { passwordSchema, userSchema } from "../../db/schema";
+import { passwordSchema, sessionSchema, userSchema } from "../../db/schema";
 import authValidations from "./auth.validations";
+import env from "../../env";
 
 const authRoutes = new Hono();
 
@@ -51,6 +53,58 @@ authRoutes.post(
       },
       201
     );
+  }
+);
+
+authRoutes.post(
+  "/login",
+  zValidator("json", authValidations.loginSchema),
+  async (c) => {
+    const { email, password } = c.req.valid("json");
+
+    const user = await db
+      .select()
+      .from(userSchema)
+      .where(eq(userSchema.email, email))
+      .innerJoin(passwordSchema, eq(userSchema.id, passwordSchema.userId))
+      .get();
+
+    if (!user || !user?.passwords) {
+      return c.json(
+        {
+          success: false,
+          message: "Invalid email and password or user not found",
+        },
+        401
+      );
+    }
+
+    const passwordMatch = await compare(password, user.passwords.hash);
+
+    if (!passwordMatch) {
+      return c.json(
+        { success: false, message: "Invalid email or password" },
+        400
+      );
+    }
+
+    const token = await sign(
+      {
+        id: user.users.id,
+        email: user.users.email,
+        username: user.users.username,
+      },
+      env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    await db.insert(sessionSchema).values({
+      userId: user.users.id,
+      expirationDate: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
+      id: user.users.id,
+    });
+
+    return c.json({ success: true, data: { token } }, 200);
   }
 );
 

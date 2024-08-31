@@ -26,7 +26,7 @@ const transport = pino.transport({
 export const logger = pino(
   {
     name: "authono",
-    level: env.LOG_LEVEL || "debug",
+    level: process.env.LOG_LEVEL || "debug",
     formatters: {
       bindings: (bindings) => {
         return {

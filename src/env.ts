@@ -4,6 +4,7 @@ import { logger } from "./middlewares/logger.middleware";
 const EnvSchema = z.object({
   NODE_ENV: z.string().default("development"),
   LOG_LEVEL: z.string().default("debug"),
+  JWT_SECRET: z.string().default("secret"),
 });
 
 export type EnvSchema = z.infer<typeof EnvSchema>;

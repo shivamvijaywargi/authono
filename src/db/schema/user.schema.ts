@@ -1,10 +1,12 @@
 import { sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { createId } from "@paralleldrive/cuid2";
 import { relations, sql } from "drizzle-orm";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+
 import roleSchema from "./role.schema";
 import sessionSchema from "./session.schema";
 import connectionSchema from "./connection.schema";
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import passwordSchema from "./password.schema";
 
 const userSchema = sqliteTable("users", {
   id: text("id")
@@ -21,10 +23,11 @@ const userSchema = sqliteTable("users", {
   updatedAt: text("updated_at"),
 });
 
-export const userRelations = relations(userSchema, ({ many }) => ({
+export const userRelations = relations(userSchema, ({ many, one }) => ({
   roles: many(roleSchema),
   sessions: many(sessionSchema),
   connections: many(connectionSchema),
+  password: one(passwordSchema),
 }));
 
 export default userSchema;
